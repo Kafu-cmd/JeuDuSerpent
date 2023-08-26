@@ -6,6 +6,7 @@ window.onload = function()
     var ctx;
     var delay = 100;
     var snakee;
+    //var newDirection;
 
     init();
 
@@ -70,34 +71,57 @@ window.onload = function()
                 case "up" :
                     nextPosition[1] -=1;
                     break;
-
-                default:
-                    console.log("mauvaise driection");
-                    break;
+                default :
+                    throw("Invalid direction");
             }
             this.body.unshift(nextPosition);
             this.body.pop();
         }
-        this.direction(newDirection);
+        this.setDirection = function(newDirection)
+        {
+            var allowedDirections;
+            switch(this.direction)
+            {
+                case "left":
+                case "right":
+                    allowedDirections = ["up" , "down"];
+                    break;
+
+                case "down" :
+                case "up" :
+                    allowedDirections = ["left" , "right"];
+                    break;
+                default :
+                    throw("Invalid direction");
+            }
+            if(allowedDirections.indexOf(newDirection) > -1 ) {
+                this.direction = newDirection;
+            }
+        }
     }
 
-    document.onkeydown = function handleKeyDown(e) {
+   document.onekeydown = function handleKeyDown(e) 
+   {
         var key = e.keyCode;
         var newDirection;
-        switch(key){
-            case 37:
-                newDirection = "left"
+        switch(key)
+        {
+            case 37 :
+                newDirection = "left";
                 break;
-            case 38:
-                newDirection = "up"
+            case 38 :
+                newDirection = "up";
                 break;
-            case 39:
-                newDirection = "right"
-                break;
-            case 40:
-                newDirection = "down"
-                break;
-        }
 
-    }
+            case 39 :
+                newDirection = "right";
+                break;
+            case 40 :
+                newDirection = "down";
+                break;
+            default :
+                return;
+        }
+        snakee.setDirection(newDirection);
+   }
 }
