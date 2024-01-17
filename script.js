@@ -9,6 +9,7 @@ window.onload = function()
     var applee;
     var widthInBlocks = canvasWidth/blockSize; /** a voir blocksize */
     var heightInBlocks = canvasHeight/blockSize;
+    var score;
 
     init();
 
@@ -21,6 +22,7 @@ window.onload = function()
         ctx = canvas.getContext('2d');
         snakee = new Snake ([[6,4] , [5,4] , [4,4]] , "right");
         applee = new Apple([10,10]);
+        score = 0;
         refreshCanvas();
     }
 
@@ -28,21 +30,48 @@ window.onload = function()
         snakee.advance();
         if(snakee.checkCollision())
         {
-            // GAME OVER
+            gameOver();
         } 
         else
         {
             if(snakee.isEatingApple(applee))
             {
-                // LE SERPENT A MAMGE LA POMME
+                score++;
+                snakee.ateApple = true;
+                do{
+                    applee.setNewPosition();
+                } while(applee.isOnSnake(snakee))
             }
             ctx.clearRect(0,0,canvasWidth, canvasHeight);
             snakee.draw();
             applee.drawApple();
+            drawScore();
             setTimeout(refreshCanvas,delay);
         }
     }
 
+    function gameOver()
+    {
+        ctx.save();
+        ctx.fillText("Game Over", 5, 15);
+        ctx.fillText("Appuyez sur la touche ESPACE pour rejouer", 5, 30);
+        ctx.restore();
+    }
+
+    function restart()
+    {
+        snakee = new Snake ([[6,4] , [5,4] , [4,4]] , "right");
+        applee = new Apple([10,10]);
+        score = 0;
+        refreshCanvas();
+    }
+
+    function drawScore()
+    {
+        ctx.save();
+        ctx.fillText(score.toString(), 5, canvasHeight - 5);
+        ctx.restore();
+    }
     function drawBlock(ctx, position)
     {
         var x = position[0]*blockSize;
@@ -54,6 +83,7 @@ window.onload = function()
     {
         this.body = body;
         this.direction = direction;
+        this.ateApple = false;
         this.draw = function() 
         {
             ctx.save();
@@ -85,7 +115,10 @@ window.onload = function()
                     throw("invalid direction");
             }
             this.body.unshift(nextPosition);
-            this.body.pop();
+            if(!this.ateApple)
+                 this.body.pop();
+            else 
+                this.ateApple = false;
         }
         this.setDirection = function(newDirection)
         {
@@ -138,7 +171,7 @@ window.onload = function()
             return wallCollision || snakeCollision;
         };
 
-        this.isEatingApple(appleToEat)
+        this.isEatingApple = function(appleToEat)
         {
             var head = this.body[0];
             if(head[0] === appleToEat.position[0] && head[1] === appleToEat.position[1])
@@ -156,16 +189,32 @@ window.onload = function()
             ctx.fillStyle = "#33cc33";
             ctx.beginPath();
             var radius = blockSize/2;
-            var x = position[0]*blockSize + radius;
-            var y = position[1]*blockSize + radius;
+            var x = this.position[0]*blockSize + radius;
+            var y = this.position[1]*blockSize + radius;
             ctx.arc(x,y, radius, 0, Math.PI*2,true);
             ctx.fill();
             ctx.restore();
         };
         this.setNewPosition = function()
         {
-            
-        }
+            var newX = Math.round(Math.random() * (widthInBlocks - 1));
+            var newY = Math.round(Math.random() * (heightInBlocks - 1));
+            this.position = [newX, newY];
+        };
+
+        this.isOnSnake = function(snakeToCheck)
+        {
+            var isOnSnake = false;
+
+            for(var i = 0; i < snakeToCheck.body.length; i++)
+            {
+                if(this.position[0] === snakeToCheck.body[i][0] && this.position[1] === snakeToCheck.body[i][1])
+                {
+                    isOnSnake = true;
+                }
+            }
+            return isOnSnake;
+        };
     }
 
    document.onkeydown = function handleKeyDown(e) 
@@ -186,6 +235,9 @@ window.onload = function()
             case 40 :
                 newDirection = "down";
                 break;
+            case 32 :
+                restart();
+                return;
             default :
                 return;
         }
